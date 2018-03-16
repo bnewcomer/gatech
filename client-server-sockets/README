@@ -1,0 +1,44 @@
+Networking Programming Project
+Name: Benjamin Newcomer
+ID: 902813104
+
+Description of files:
+
+	src/
+		client.c
+		c file that contains functions required to run client
+
+		server.c
+		c file that contains functions required to run server
+
+		Makefile
+		Make file that compiles c files into executables found in
+		bin folder
+
+	bin/
+		client
+		executable file that runs the main() function found
+		in client.c
+
+		usage:   ./bin/client server_ip server_port
+		example: ./bin/client 127.0.0.1 8080
+
+		server
+		executable file that runs the main() function found
+		in server.c
+
+		usage:   ./bin/server server_port
+		example: ./bin/server 8080
+
+	server.log
+	log file populated by server executable that records intances
+	of servers, new connections, request and response details
+
+	client-output.txt
+	example capture of client executable output
+
+Client/Server API:
+
+	"GET time" requests the current time on the server
+
+	"GET weather" requests weather

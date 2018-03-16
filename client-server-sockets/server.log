@@ -1,0 +1,18 @@
+--------------------
+server instance started Wed Nov 18 21:04:19 2015
+listening on port 8080...
+new connection opened: 127.0.0.1:55767
+request received: GET time
+response sent: Wed Nov 18 21:04:35 2015
+request received: GET weather
+response sent: sunny :D
+connection terminated by client
+--------------------
+server instance started Wed Nov 18 21:04:19 2015
+listening on port 8080...
+new connection opened: 127.0.0.1:55511
+request received: GET time
+response sent: Wed Nov 18 21:04:41 2015
+request received: GET weather
+response sent: thunderstorm!
+connection terminated by client

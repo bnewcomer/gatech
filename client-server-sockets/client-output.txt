@@ -1,0 +1,54 @@
+// client 1
+connected to server at 127.0.0.1:8080
+please choose an option by entering the corresponding number
+     1 get time
+     2 get weather
+     3 exit
+     4 repeat options
+>> 1
+sending: GET time
+response: Wed Nov 18 21:04:35 2015
+please choose an option by entering the corresponding number
+     1 get time
+     2 get weather
+     3 exit
+     4 repeat options
+>> 2
+sending: GET weather
+response: sunny :D
+please choose an option by entering the corresponding number
+     1 get time
+     2 get weather
+     3 exit
+     4 repeat options
+>> 3
+// client 2
+connected to server at 127.0.0.1:8080
+please choose an option by entering the corresponding number
+     1 get time
+     2 get weather
+     3 exit
+     4 repeat options
+>> 1
+sending: GET time
+response: Wed Nov 18 21:04:41 2015
+please choose an option by entering the corresponding number
+     1 get time
+     2 get weather
+     3 exit
+     4 repeat options
+>> 2
+sending: GET weather
+response: thunderstorm!
+please choose an option by entering the corresponding number
+     1 get time
+     2 get weather
+     3 exit
+     4 repeat options
+>> 4
+please choose an option by entering the corresponding number
+     1 get time
+     2 get weather
+     3 exit
+     4 repeat options
+>> 3
