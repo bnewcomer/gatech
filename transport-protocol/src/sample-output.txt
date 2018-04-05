@@ -1,0 +1,16 @@
+Sample Output
+
+
+Client
+
+(py3env) bennwcmr94: ~/Projects/gatech/cs3251/src$ python run-client.py 5004 127.0.0.1 5001
+>>>connect
+>>>get notes
+>>>post notes
+>>>disconnect
+>>>
+
+Server
+
+(py3env) bennwcmr94: ~/Projects/gatech/cs3251/src$ python run-server.py 5005 127.0.0.1 5001
+>>>

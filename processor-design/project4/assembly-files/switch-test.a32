@@ -1,0 +1,24 @@
+.NAME	HEX= 0xffff0000
+.NAME	LEDR=0xFFFF0020
+.NAME	LEDG=0xFFFF0040
+.NAME	KEY= 0xFFFF0100
+.NAME	SW=  0xFFFF0120
+.ORIG 0x60
+WaitSwitchUp:
+	addi	t2,Zero,1
+	lw		t1,SW(Zero)
+	andi	t1,t1,1
+	sw		t1,HEX(Zero)
+	bne		t1,t2,WaitSwitchUp
+WaitSwitchDown:
+	add 	t2, Zero, Zero
+	lw		t1,SW(Zero)
+	andi	t1,t1,1
+	sw		t1,HEX(Zero)
+	bne		t1,Zero,WaitSwitchDown
+Done:
+	; Turn on LEDG, put FFFF on HEX, LEDR should still be off
+	not		t0,Zero
+	sw		t0,LEDG(Zero)
+	sw		t0,HEX(Zero)
+	beq		t0,t0,Done

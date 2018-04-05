@@ -1,0 +1,2 @@
+.ORIG 0x60
+ADDI		S1,S1,0X1

@@ -1,0 +1,115 @@
+WIDTH=32;
+DEPTH=2048;
+ADDRESS_RADIX=HEX;
+DATA_RADIX=HEX;
+CONTENT BEGIN;
+[00000000..00000003] : 0000;
+-- @ 0x00000010:subi 	ssp, ssp, 8=>ADDI SSP, SSP, -8
+00000004 : c631fff8;
+-- @ 0x00000014:sw 		a0, 4(ssp)
+00000005 : 76020004;
+-- @ 0x00000018:sw 		a1, 0(ssp)
+00000006 : 76040000;
+-- @ 0x0000001c:rsr 	t0, IDN
+00000007 : 3a060011;
+-- @ 0x00000020:addi 	a0, Zero, 1
+00000008 : c0020001;
+-- @ 0x00000024:addi 	t1, Zero, 1
+00000009 : c0120001;
+-- @ 0x00000028:beq 	t0, t1, TimerHandler
+0000000a : 82120018;
+-- @ 0x0000002c:addi 	t1, t1, 1
+0000000b : c2520001;
+-- @ 0x00000030:beq 	t0, t1, KeyHandler
+0000000c : 8212001f;
+-- @ 0x00000034:addi 	t1, t1, 1
+0000000d : c2520001;
+-- @ 0x00000038:beq 	t0, t1, SwitchHandler
+0000000e : 82120024;
+-- @ 0x0000003c:beq 	Zero, Zero, ErrorHandler
+0000000f : 80000029;
+-- @ 0x00000040:lw 		a0, 4(ssp)
+00000010 : 56020004;
+-- @ 0x00000044:lw 		a1, 0(ssp)
+00000011 : 56040000;
+-- @ 0x00000048:addi 	ssp, ssp, 8
+00000012 : c6300008;
+-- @ 0x0000004c:reti
+00000013 : 38000010;
+[00000014..00000017] : 0000;
+-- @ 0x00000060:ANDI	Zero,Zero,0
+00000018 : e0000000;
+-- @ 0x00000064:ADDI	SP,Zero,StkTop
+00000019 : c03c1060;
+-- @ 0x00000068:ADDI	SSP,Zero,SStkTop
+0000001a : c0302000;
+-- @ 0x0000006c:SW 		Zero, Seconds(Zero)
+0000001b : 70000190;
+-- @ 0x00000070:addi 	a0, Zero, WRLIM
+0000001c : c002000a;
+-- @ 0x00000074:addi 	a1, Zero, LIMIT
+0000001d : c00403e8;
+-- @ 0x00000078:sys
+0000001e : 38000000;
+-- @ 0x0000007c:addi 	a0, Zero, WRCNT
+0000001f : c002000c;
+-- @ 0x00000080:addi 	a1, Zero, 0
+00000020 : c0040000;
+-- @ 0x00000084:sys
+00000021 : 38000000;
+-- @ 0x00000088:jmp 	wait(Zero)=>JAL R6, wait(00000)
+00000022 : b80c0022;
+-- @ 0x0000008c:addi 	a0, Zero, WRCNT
+00000023 : c002000c;
+-- @ 0x00000090:addi 	a1, Zero, 0
+00000024 : c0040000;
+-- @ 0x00000094:sys
+00000025 : 38000000;
+-- @ 0x00000098:lw 		a1, Seconds(Zero)
+00000026 : 50040190;
+-- @ 0x0000009c:addi 	a1, a1, 1
+00000027 : c0840001;
+-- @ 0x000000a0:sw 		a1, Seconds(Zero)
+00000028 : 70040190;
+-- @ 0x000000a4:addi 	a0, Zero, WRHEX
+00000029 : c0020001;
+-- @ 0x000000a8:sys
+0000002a : 38000000;
+-- @ 0x000000ac:jmp 	InterruptDone(Zero)=>JAL R6, InterruptDone(00000)
+0000002b : b80c0010;
+-- @ 0x000000b0:addi 	a0, Zero, RDKEY
+0000002c : c0020007;
+-- @ 0x000000b4:sys
+0000002d : 38000000;
+-- @ 0x000000b8:addi 	a0, Zero, WRLEDG
+0000002e : c0020003;
+-- @ 0x000000bc:addi 	a1, rv, 0
+0000002f : c1440000;
+-- @ 0x000000c0:sys
+00000030 : 38000000;
+-- @ 0x000000c4:bne 	rv, Zero, KeyHandler
+00000031 : 9941fffa;
+-- @ 0x000000c8:jmp 	InterruptDone(Zero)=>JAL R6, InterruptDone(00000)
+00000032 : b80c0010;
+-- @ 0x000000cc:addi 	a0, Zero, RDSW
+00000033 : c0020008;
+-- @ 0x000000d0:sys
+00000034 : 38000000;
+-- @ 0x000000d4:addi 	a0, Zero, WRLEDG
+00000035 : c0020003;
+-- @ 0x000000d8:addi 	a1, rv, 0
+00000036 : c1440000;
+-- @ 0x000000dc:bne 	rv, Zero, SwitchHandler
+00000037 : 9941fffb;
+-- @ 0x000000e0:jmp 	InterruptDone(Zero)=>JAL R6, InterruptDone(00000)
+00000038 : b80c0010;
+-- @ 0x000000e4:rsr 	a1, IDN
+00000039 : 38860011;
+-- @ 0x000000e8:addi 	a0, Zero, WRLEDR
+0000003a : c0020005;
+-- @ 0x000000ec:sys
+0000003b : 38000000;
+-- @ 0x000000f0:jmp		ErrorHandler(Zero)=>JAL R6, ErrorHandler(00000)
+0000003c : b80c0039;
+[0000003d..07ff] : 0000;
+END;

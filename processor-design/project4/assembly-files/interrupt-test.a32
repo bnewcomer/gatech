@@ -1,0 +1,150 @@
+; Addresses for I/O
+.NAME WRHEX  = 1
+.NAME RDHEX  = 2
+.NAME WRLEDG = 3
+.NAME RDLEDG = 4
+.NAME WRLEDR = 5
+.NAME RDLEDR = 6
+.NAME RDKEY = 7
+.NAME RDSW = 8
+.NAME RDCNT = 9
+.NAME WRLIM = 10
+.NAME RDLIM = 11
+.NAME WRCNT = 12 
+
+; Stack begins at the very top of memory
+.NAME	SStkTop=8192
+.NAME   StkTop=4192
+
+.NAME Seconds=400
+
+.NAME LIMIT = 1000
+
+.ORIG 0x10
+;;;;;;;; interrupt handler ;;;;;;;;
+InterruptHandler:
+
+	; save registers
+	subi 	ssp, ssp, 8
+	sw 		a0, 4(ssp)
+	sw 		a1, 0(ssp)
+
+	; check for cause of interrupt
+	rsr 	t0, IDN
+	addi 	a0, Zero, 1
+
+	; check if timer
+	addi 	t1, Zero, 1
+	beq 	t0, t1, TimerHandler
+	
+	; check if key
+	addi 	t1, t1, 1
+	beq 	t0, t1, KeyHandler
+	
+	; check if switch
+	addi 	t1, t1, 1
+	beq 	t0, t1, SwitchHandler
+
+	; if we get here there was
+	; a problem
+	beq 	Zero, Zero, ErrorHandler
+
+InterruptDone:
+	
+	; restore registers
+	lw 		a0, 4(ssp)
+	lw 		a1, 0(ssp)
+	addi 	ssp, ssp, 8
+
+	reti
+
+.ORIG 0x60
+;;;;;;;;;; main code ;;;;;;;;;;;;;;;;
+
+	; Put a zero in the Zero register
+	ANDI	Zero,Zero,0
+	
+	; SP Points to the top of the stack
+	ADDI	SP,Zero,StkTop
+
+	; SSP Points to the top of the system stack
+	ADDI	SSP,Zero,SStkTop
+
+	; start seconds counter at zero
+	SW 		Zero, Seconds(Zero)
+
+	; limit for timer
+	addi 	a0, Zero, WRLIM
+	addi 	a1, Zero, LIMIT
+	sys
+
+	; reset timer count to 0
+	addi 	a0, Zero, WRCNT
+	addi 	a1, Zero, 0
+	sys
+
+	wait:
+	jmp 	wait(Zero)
+
+;;;;;;;;;;; device handlers ;;;;;;;;;;;;;
+
+TimerHandler: ;handles timer interrupts
+	; reset count to zero,
+	; which acks interrupt
+	addi 	a0, Zero, WRCNT
+	addi 	a1, Zero, 0
+	sys
+
+	; increment seconds
+	lw 		a1, Seconds(Zero) 
+	addi 	a1, a1, 1
+	sw 		a1, Seconds(Zero)
+
+	; display seconds
+	addi 	a0, Zero, WRHEX
+	sys
+
+	jmp 	InterruptDone(Zero)
+
+KeyHandler: ; handles key interrupts
+	; read keys,
+	; which acks interrupt
+	addi 	a0, Zero, RDKEY
+	sys
+
+	; display key value
+	addi 	a0, Zero, WRLEDG
+	addi 	a1, rv, 0
+	sys
+
+	; if keys value is not zero,
+	; then loop back around because
+	; the key is still being pressed
+	bne 	rv, Zero, KeyHandler
+
+	jmp 	InterruptDone(Zero)
+
+SwitchHandler: ; handles switch interrupts
+	; read switch,
+	; which acks interrupt
+	addi 	a0, Zero, RDSW
+	sys
+
+	; display sw value
+	addi 	a0, Zero, WRLEDG
+	addi 	a1, rv, 0
+	;sys
+
+	; if switches value is not zero,
+	; then loop back around because
+	; a switch is still up
+	bne 	rv, Zero, SwitchHandler
+
+	jmp 	InterruptDone(Zero)
+
+ErrorHandler: ; handles random errors
+	rsr 	a1, IDN
+	addi 	a0, Zero, WRLEDR
+	sys
+	; Loop forever
+	jmp		ErrorHandler(Zero)	

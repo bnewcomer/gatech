@@ -1,0 +1,8 @@
+.NAME HEX=0xFFFF0000
+
+.ORIG 0x60
+; write to PCS
+ADDI	A0, Zero, 5
+WSR		PCS, A0
+RSR		A1, PCS
+SW		A1, HEX(Zero)

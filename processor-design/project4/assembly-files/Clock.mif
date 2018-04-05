@@ -1,0 +1,318 @@
+WIDTH=32;
+DEPTH=2048;
+ADDRESS_RADIX=HEX;
+DATA_RADIX=HEX;
+CONTENT BEGIN;
+[00000000..00000017] : 0000;
+-- @ 0x00000060:addi	t1, Zero, 60
+00000018 : c012003c;
+-- @ 0x00000064:addi 	a0, Zero, 0
+00000019 : c0020000;
+-- @ 0x00000068:add 	a2, Zero, Zero
+0000001a : 00003018;
+-- @ 0x0000006c:addi	t0, Zero, 500
+0000001b : c01001f4;
+-- @ 0x00000070:sw		t0, LIM(Zero)
+0000001c : 70110204;
+-- @ 0x00000074:sw		a2, COUNT(Zero)
+0000001d : 70070200;
+-- @ 0x00000078:lw		t2, TCTL(Zero)
+0000001e : 50150208;
+-- @ 0x0000007c:lw		t3, KCTRL(Zero)
+0000001f : 50170104;
+-- @ 0x00000080:andi	t2, t2, 1
+00000020 : e2940001;
+-- @ 0x00000084:andi 	t3, t3, 0x0002
+00000021 : e2d60002;
+-- @ 0x00000088:addi	t4, Zero, 2
+00000022 : c0180002;
+-- @ 0x0000008c:beq		t3, t4, CheckKEY
+00000023 : 82d8003e;
+-- @ 0x00000090:beq		t2, Zero, waithalfsec
+00000024 : 8281fff9;
+-- @ 0x00000094:sw		Zero, TCTL(Zero)
+00000025 : 70010208;
+-- @ 0x00000098:xori 	a0, a0, 0xFFFF
+00000026 : f043ffff;
+-- @ 0x0000009c:lw		a1, SW(Zero)
+00000027 : 50050120;
+-- @ 0x000000a0:andi 	a1, a1, 1
+00000028 : e0840001;
+-- @ 0x000000a4:addi 	t5, Zero, 1
+00000029 : c01a0001;
+-- @ 0x000000a8:bne 	t5, a1, notSwitched
+0000002a : 9b440003;
+-- @ 0x000000ac:xori	t5, a0, 0xF
+0000002b : f05bffff;
+-- @ 0x000000b0:sw 		Zero, LEDG(Zero)
+0000002c : 70010040;
+-- @ 0x000000b4:beq 	Zero, Zero, backToCount
+0000002d : 80000001;
+-- @ 0x000000b8:sw 		Zero, LEDR(Zero)
+0000002e : 70010020;
+-- @ 0x000000bc:bne 	a0, Zero, waithalfsec
+0000002f : 9841ffee;
+-- @ 0x000000c0:addi 	a2, a2, 1
+00000030 : c0c60001;
+-- @ 0x000000c4:bne		a2, t1, reset
+00000031 : 98d2002a;
+-- @ 0x000000c8:lw 		t3, HEX(Zero)
+00000032 : 50170000;
+-- @ 0x000000cc:addi	a1, Zero, 0x000F
+00000033 : c004000f;
+-- @ 0x000000d0:addi	t5, Zero, 0x0009
+00000034 : c01a0009;
+-- @ 0x000000d4:and		t4, t3, a1
+00000035 : 02c4c01c;
+-- @ 0x000000d8:bne 	t4, t5, incrementLSmin
+00000036 : 9b1a0029;
+-- @ 0x000000dc:andi	t3, t3, 0xFFF0
+00000037 : e2d7fff0;
+-- @ 0x000000e0:addi	t3, t3, 0x0010
+00000038 : c2d60010;
+-- @ 0x000000e4:addi	a1, Zero, 0x00F0
+00000039 : c00400f0;
+-- @ 0x000000e8:addi	t5, Zero, 0x0060
+0000003a : c01a0060;
+-- @ 0x000000ec:and 	t4, t3, a1
+0000003b : 02c4c01c;
+-- @ 0x000000f0:bne 	t4, t5, updateHEX
+0000003c : 9b1a001d;
+-- @ 0x000000f4:addi	a1, Zero, 0xF000
+0000003d : c005f000;
+-- @ 0x000000f8:addi 	t6, Zero, 0x2000
+0000003e : c01c2000;
+-- @ 0x000000fc:and		s0, t3, a1
+0000003f : 02c5001c;
+-- @ 0x00000100:beq		s0, t6, two
+00000040 : 841c0002;
+-- @ 0x00000104:bne     s0, t6, notTwo
+00000041 : 9c1c000f;
+-- @ 0x00000108:beq		Zero, Zero, updateHEX
+00000042 : 80000017;
+-- @ 0x0000010c:andi	t3, t3, 0xFF0F
+00000043 : e2d7ff0f;
+-- @ 0x00000110:addi	t3, t3, 0x0100
+00000044 : c2d60100;
+-- @ 0x00000114:addi	a1, Zero, 0x0F00
+00000045 : c0040f00;
+-- @ 0x00000118:addi	t5, Zero, 0x0400
+00000046 : c01a0400;
+-- @ 0x0000011c:and 	t4, t3, a1
+00000047 : 02c4c01c;
+-- @ 0x00000120:bne 	t4, t5, updateHEX
+00000048 : 9b1a0011;
+-- @ 0x00000124:andi	t3, t3, 0xF0FF
+00000049 : e2d7f0ff;
+-- @ 0x00000128:andi	t3, t3, 0x1000
+0000004a : e2d61000;
+-- @ 0x0000012c:addi	a1, Zero, 0xF000
+0000004b : c005f000;
+-- @ 0x00000130:addi	t5, Zero, 0x3000
+0000004c : c01a3000;
+-- @ 0x00000134:and		t4, t3, a1
+0000004d : 02c4c01c;
+-- @ 0x00000138:bne 	t4, t5, updateHEX
+0000004e : 9b1a000b;
+-- @ 0x0000013c:add 	t3, Zero, Zero
+0000004f : 0000b018;
+-- @ 0x00000140:beq 	Zero, Zero, updateHEX
+00000050 : 80000009;
+-- @ 0x00000144:andi	t3, t3, 0xFF0F
+00000051 : e2d7ff0f;
+-- @ 0x00000148:addi	t3, t3, 0x0100
+00000052 : c2d60100;
+-- @ 0x0000014c:addi	a1, Zero, 0x0F00
+00000053 : c0040f00;
+-- @ 0x00000150:addi	t5, Zero, 0x0a00
+00000054 : c01a0a00;
+-- @ 0x00000154:and 	t4, t3, a1
+00000055 : 02c4c01c;
+-- @ 0x00000158:bne 	t4, t5, updateHEX
+00000056 : 9b1a0003;
+-- @ 0x0000015c:add 	t3, Zero, s0
+00000057 : 0020b018;
+-- @ 0x00000160:addi 	t3, s0, 0x1000
+00000058 : c4161000;
+-- @ 0x00000164:beq 	Zero, Zero, updateHEX
+00000059 : 80000000;
+-- @ 0x00000168:sw		t3, HEX(Zero)
+0000005a : 70170000;
+-- @ 0x0000016c:addi	a2, Zero, 0
+0000005b : c0060000;
+-- @ 0x00000170:sw		a2, LEDG(Zero)
+0000005c : 70070040;
+-- @ 0x00000174:sw		Zero, COUNT(Zero)
+0000005d : 70010200;
+-- @ 0x00000178:sw		Zero, TCTL(Zero)
+0000005e : 70010208;
+-- @ 0x0000017c:beq 	Zero, Zero, waithalfsec
+0000005f : 8001ffbe;
+-- @ 0x00000180:addi	t3, t3, 0x0001
+00000060 : c2d60001;
+-- @ 0x00000184:beq 	Zero, Zero, updateHEX
+00000061 : 8001fff8;
+-- @ 0x00000188:lw 		t7, KEY(Zero)
+00000062 : 501f0100;
+-- @ 0x0000018c:lw		a1, SW(Zero)
+00000063 : 50050120;
+-- @ 0x00000190:andi 	a1, a1, 1
+00000064 : e0840001;
+-- @ 0x00000194:addi 	t5, Zero, 1
+00000065 : c01a0001;
+-- @ 0x00000198:bne 	t5, a1, goBack
+00000066 : 9b45ffbd;
+-- @ 0x0000019c:lw 		t6, HEX(Zero)
+00000067 : 501d0000;
+-- @ 0x000001a0:andi	s0, t7, 1
+00000068 : e3e00001;
+-- @ 0x000001a4:addi 	t5, Zero, 1
+00000069 : c01a0001;
+-- @ 0x000001a8:beq		s0, t5, decrementMinute
+0000006a : 841a0027;
+-- @ 0x000001ac:andi 	s0,	t7,	2
+0000006b : e3e00002;
+-- @ 0x000001b0:addi 	t5, Zero, 2
+0000006c : c01a0002;
+-- @ 0x000001b4:beq		s0, t5, incrementMinute
+0000006d : 841a0032;
+-- @ 0x000001b8:andi 	s0,	t7,	0x0008
+0000006e : e3e00008;
+-- @ 0x000001bc:addi 	t5, Zero, 0x0008
+0000006f : c01a0008;
+-- @ 0x000001c0:beq 	s0, t5, incrementHour
+00000070 : 841a0004;
+-- @ 0x000001c4:andi 	s0,	t7,	4
+00000071 : e3e00004;
+-- @ 0x000001c8:addi 	t5, Zero, 4
+00000072 : c01a0004;
+-- @ 0x000001cc:beq 	s0, t5, decrementHour
+00000073 : 841a0010;
+-- @ 0x000001d0:beq		Zero, Zero, goBack
+00000074 : 8001ffaf;
+-- @ 0x000001d4:andi	s1, t6, 0x00FF
+00000075 : e3a200ff;
+-- @ 0x000001d8:andi 	s2, t6, 0xFF00
+00000076 : e3a5ff00;
+-- @ 0x000001dc:addi 	s0, Zero, 0x2300
+00000077 : c0202300;
+-- @ 0x000001e0:beq 	s0, s2, twentyThree
+00000078 : 84240009;
+-- @ 0x000001e4:andi 	s0, t6, 0x0F00
+00000079 : e3a00f00;
+-- @ 0x000001e8:addi 	s3, Zero, 0x0900
+0000007a : c0260900;
+-- @ 0x000001ec:beq 	s3, s0, lastDigitNine
+0000007b : 84e00003;
+-- @ 0x000001f0:addi	s2, s2, 0x0100
+0000007c : c4a40100;
+-- @ 0x000001f4:add 	t6, s2, s1
+0000007d : 04a2e018;
+-- @ 0x000001f8:beq 	Zero, Zero, jumptoBack
+0000007e : 80000031;
+-- @ 0x000001fc:addi	s2, s2, 0x0700
+0000007f : c4a40700;
+-- @ 0x00000200:add 	t6, s2, s1
+00000080 : 04a2e018;
+-- @ 0x00000204:beq 	Zero, Zero, jumptoBack
+00000081 : 8000002e;
+-- @ 0x00000208:add 	t6, Zero, s1
+00000082 : 0022e018;
+-- @ 0x0000020c:beq 	Zero, Zero, jumptoBack
+00000083 : 8000002c;
+-- @ 0x00000210:andi	s1, t6, 0x00FF
+00000084 : e3a200ff;
+-- @ 0x00000214:andi 	s2, t6, 0xFF00
+00000085 : e3a5ff00;
+-- @ 0x00000218:beq 	s2, Zero, HouratZero
+00000086 : 84800008;
+-- @ 0x0000021c:andi 	s0, t6, 0x0F00
+00000087 : e3a00f00;
+-- @ 0x00000220:beq 	Zero, s0, lastDigitZero
+00000088 : 80200003;
+-- @ 0x00000224:subi	s2, s2, 0x0100=>ADDI S2, S2, -0x0100
+00000089 : c4a5ff00;
+-- @ 0x00000228:add 	t6, s2, s1
+0000008a : 04a2e018;
+-- @ 0x0000022c:beq 	Zero, Zero, jumptoBack
+0000008b : 80000024;
+-- @ 0x00000230:subi	s2, s2, 0x0700=>ADDI S2, S2, -0x0700
+0000008c : c4a5f900;
+-- @ 0x00000234:add 	t6, s2, s1
+0000008d : 04a2e018;
+-- @ 0x00000238:beq 	Zero, Zero, jumptoBack
+0000008e : 80000021;
+-- @ 0x0000023c:addi 	s0, Zero, 0x2300
+0000008f : c0202300;
+-- @ 0x00000240:add 	t6, s0, s1
+00000090 : 0422e018;
+-- @ 0x00000244:beq 	Zero, Zero, jumptoBack
+00000091 : 8000001e;
+-- @ 0x00000248:andi	s1, t6, 0x00FF
+00000092 : e3a200ff;
+-- @ 0x0000024c:andi 	s2, t6, 0xFF00
+00000093 : e3a5ff00;
+-- @ 0x00000250:beq 	s1, Zero, atZero
+00000094 : 84400009;
+-- @ 0x00000254:andi 	s0, t6, 0x000F
+00000095 : e3a0000f;
+-- @ 0x00000258:beq 	s0, Zero, lastDigZero
+00000096 : 84000004;
+-- @ 0x0000025c:andi 	s4, t6, 0xFFF0
+00000097 : e3a9fff0;
+-- @ 0x00000260:subi	s0, s0, 1=>ADDI S0, S0, -1
+00000098 : c421ffff;
+-- @ 0x00000264:add 	t6, s4, s0
+00000099 : 0520e018;
+-- @ 0x00000268:beq 	Zero, Zero, jumptoBack
+0000009a : 80000015;
+-- @ 0x0000026c:subi 	s1, s1, 7=>ADDI S1, S1, -7
+0000009b : c463fff9;
+-- @ 0x00000270:add 	t6, s2, s1
+0000009c : 04a2e018;
+-- @ 0x00000274:beq 	Zero, Zero, jumptoBack
+0000009d : 80000012;
+-- @ 0x00000278:addi 	t6, s2, 0x0059
+0000009e : c49c0059;
+-- @ 0x0000027c:beq 	Zero, Zero, jumptoBack
+0000009f : 80000010;
+-- @ 0x00000280:addi 	s0, Zero, 0x0059
+000000a0 : c0200059;
+-- @ 0x00000284:andi 	s1, t6, 0x00FF
+000000a1 : e3a200ff;
+-- @ 0x00000288:andi 	s2, t6, 0xFF00
+000000a2 : e3a5ff00;
+-- @ 0x0000028c:beq 	s0, s1, fiftynine
+000000a3 : 8422000a;
+-- @ 0x00000290:andi 	s0, t6, 0x000F
+000000a4 : e3a0000f;
+-- @ 0x00000294:addi 	s3, Zero, 9
+000000a5 : c0260009;
+-- @ 0x00000298:beq 	s0, s3, justNine
+000000a6 : 84260004;
+-- @ 0x0000029c:andi 	s4, t6, 0xFFF0
+000000a7 : e3a9fff0;
+-- @ 0x000002a0:addi 	s0, s0, 1
+000000a8 : c4200001;
+-- @ 0x000002a4:add 	t6, s4,	s0
+000000a9 : 0520e018;
+-- @ 0x000002a8:beq 	Zero, Zero, jumptoBack
+000000aa : 80000005;
+-- @ 0x000002ac:addi 	s1, s1, 7
+000000ab : c4620007;
+-- @ 0x000002b0:add 	t6, s2, s1
+000000ac : 04a2e018;
+-- @ 0x000002b4:beq 	Zero, Zero, jumptoBack
+000000ad : 80000002;
+-- @ 0x000002b8:add 	t6, s2, Zero
+000000ae : 0480e018;
+-- @ 0x000002bc:beq 	Zero, Zero, jumptoBack
+000000af : 80000000;
+-- @ 0x000002c0:sw 		t6, HEX(Zero)
+000000b0 : 701d0000;
+-- @ 0x000002c4:sw 		Zero, KCTRL(Zero)
+000000b1 : 70010104;
+-- @ 0x000002c8:beq 	Zero, Zero, goBack
+000000b2 : 8001ff71;
+[000000b3..07ff] : 0000;
+END;

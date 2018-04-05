@@ -1,0 +1,2 @@
+	BEQ			Zero,Zero,AtZero
+	addi		s1,s1,0x1

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+	<body>
+		
+		<div class="container">
+			
+			<!-- this group of spans will be edited using javascript -->
+			<p>
+				<span id="span1">This is span1</span>
+				<span id="span2">This is span2</span>
+				<span id="span3">This is span3</span>
+				<span id="spanA">This is spanA</span>
+				<span id="spanB">This is spanB</span>
+			</p>
+	
+			<!-- these inputs provide the data that each function uses to edit a span -->
+			<p>
+				<input type="text" id="input-span" placeholder="input span"/>
+				<input type="text" id="input-value" placeholder="input value"/>
+			</p>	
+	
+			<!-- these buttons call functions that read the input values and edit the spans -->
+			<p>
+				<button type="button" id="button1" onclick="refreshSpanById()">refresh by Id</button>
+				<button type="button" id="button2" onclick="refreshSpanByIndex()">refresh by Index</button>
+			</p>
+		
+		</div>
+		
+	<script type="text/javascript">
+	
+	/**
+	 * getInputValues gets the value of the input elements 
+	 * #input-span and #input-id and returns the values
+	 * as an object in the format: 
+	 * {
+	 *	span: data,
+	 *  value: data
+	 * }
+	 */
+	function getInputValues() {
+		// get the value of the two inputs
+		var spanData = document.getElementById('input-span').value,
+		valueData = document.getElementById('input-value').value;
+		
+		var returnData = {
+			span: spanData,
+			value: valueData
+		};
+		
+		return returnData;
+	}
+	
+	/**
+	 * refreshSpanById replaces the innerHTML of the span given by the value
+	 * of #input-span with the value of #input-value. The value of #input-span must be
+	 * a span id.
+	 */
+	function refreshSpanById() {
+		var inputData = getInputValues();
+		
+		console.log(inputData);
+		
+		// replace innerHTML of the span with value of the input
+		document.getElementById(inputData.span).innerHTML = inputData.value;
+	};
+	
+	/**
+	 * refreshSpanByIndex replaces the innerHTML of the span given by the value
+	 * of #input-span with #input-value.value. The value of #input-span must be
+	 * an integer index.
+	 */
+	function refreshSpanByIndex() {
+		var inputData = getInputValues();
+		
+		console.log(inputData);
+		
+		// replace the innerHTML of the span with the value of the input
+		document.getElementsByTagName('span')[inputData.span].innerHTML = inputData.value;
+		
+		
+	}
+	
+	// this section shows that code outside of the 
+	window.onload = function() {
+		console.log('I am INSIDE the window.onload function');
+	};
+	
+	console.log('I am OUTSIDE the window.onload function');
+	</script>
+	
+	<style>
+	.container
+	{
+		background:#659D8F;
+		width:300px;
+		height:250px;
+		margin:0 auto;
+		padding:20px;
+		box-shadow:1px 1px black;
+	}
+	
+	p 
+	{
+		text-align:center;
+	}
+	
+	span 
+	{
+		display:block;
+		width:250px;
+		margin:10px auto;
+		line-height:1.5em;
+		background:white;
+		box-shadow:inset 1px 1px black;
+	}
+	</style>
+	
+	</body>
+</html>
+
+

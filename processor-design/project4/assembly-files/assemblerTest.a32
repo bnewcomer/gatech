@@ -1,0 +1,20 @@
+; Stack begins at the very top of memory
+.NAME	StkTop=8192
+; Addresses for I/O
+.NAME	HEX= 0xffff0000
+.NAME	LEDR=0xFFFF0020
+.NAME	LEDG=0xFFFF0040
+.NAME	KEY= 0xFFFF0100
+.NAME	SW=  0xFFFF0120
+;  Number of sorting iterations
+.NAME	ItNum=300
+; The array starts at data address 0x400 and has 1024 elements (4kB)
+.NAME	Array=0x400
+.NAME	ArrayBytes=4096
+
+	;  Now the actual code
+	.ORIG 0x60
+	SYS
+	RETI
+	RSR A1, IHA
+	WSR IHA, A2

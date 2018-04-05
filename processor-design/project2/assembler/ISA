@@ -1,0 +1,38 @@
+This is the ISA that the assembler implements
+Instruction Types_____________________________________________________________
+
+R-type: Rx, Ry, Rz
+I-Type: Rx, Ry, imm
+J-type: Rx, imm(Ry)
+
+
+Instructions__________________________________________________________________
+=======
+  CMD  Opcode  Instruction     Explanation                      Notes
+
+**Primary Instructions**
+  
+  EXT  00000    N/A                                             use secondary opcode
+  LW   01010    LW Rx, imm(Ry)    Rx <= DMEM[Ry + imm]          load word
+  SW   01110    SW Rx, imm(Ry)    DMEM[Ry + imm] <= Ry          save word
+  BEQ  10000    BEQ Rx, Ry, imm   if (Rx == Ry) PC <= PC + imm  branch if equal
+  BLT  10001    BLT Rx, Ry, imm   if (Rx < Ry) PC <= PC + imm   branch if less than
+  BLE  10010    BLE Rx, Ry, imm   if (Rx <= Ry) PC <= PC + imm  branch if less than or equal to
+  BNE  10011    BNE Rx, Ry, imm   if (Rx != Ry) PC <= PC + imm  branch if not equal
+  JAL  10111    JAL Rx, imm(Ry)   PC <= Rx + imm                jump to address in reg
+  ADDI 11000    ADDI Rx, Ry, imm  Rx <= Ry + imm                add immediate
+  ANDI 11100    ANDI Rx, Ry, imm  Rx <= Ry & imm                and immediate
+  ORI  11101    ORI Rx, Ry, imm   Rx <= Ry | imm                or immediate
+  XORI 11110    XORI Rx, Ry, imm  Rx <= Ry ^ imm                xor immediate
+
+**Secondary Instructions**  
+  
+  SUB  01000    SUB Rx, Ry, Rz    Rx <= Ry - Rz                 subtract
+  NAND 01100    NAND Rx, Ry, Rz   Rx <= ~(Ry & Rz)              nand
+  NOR  01101    NOR Rx, Ry, Rz    Rx <= ~(Ry | Rz)              nor
+  NXOR 01110    NXOR Rx, Ry, Rz   Rx <= ~(Ry ^ Rz)              not xor
+  EQ   10000    EQ Rx, Ry, Rz     Rx <= (Ry == Rz)              equal
+  LT   10001    LT Rx, Ry, Rz     Rx <= (Ry < Rz)               less than
+  LE   10010    LE Rx, Ry, Rz     Rx <= (Ry <= Rz)              less than or equal to
+  NE   10011    NE Rx, Ry, Rz     Rx <= (Ry != Rz)              not equal
+  ADD  11000    ADD Rx, Ry, Rz    Rx <= Ry + Rz                 add

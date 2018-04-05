@@ -1,0 +1,129 @@
+// order: 1 (primary), 2 (secondary), -1 (pseudo instr)
+// opcode: primary or secondary opcode. primary opcode for secondary
+//   instructions is 00000.
+
+{
+	// primary
+	"LW" : {
+		"order" : 1,
+		"opcode" : 01010
+	},
+	"SW" : {
+		"order" : 1,
+		"opcode" : 01110
+	},
+	"BEQ" : {
+		"order" : 1,
+		"opcode" : 10000
+	},
+	"BLT" : {
+		"order" : 1,
+		"opcode" : 10001
+	},
+	"BLE" : {
+		"order" : 1,
+		"opcode" : 10010
+	},
+	"BNE" : {
+		"order" : 1,
+		"opcode" : 10011
+	},
+	"JAL" : {
+		"order" : 1,
+		"opcode" : 10111
+	},
+	"ADDI" : {
+		"order" : 1,
+		"opcode" : 11000
+	},
+	"ANDI" : {
+		"order" : 1,
+		"opcode" : 11100
+	},
+	"ORI" : {
+		"order" : 1,
+		"opcode" : 11101
+	},
+	"XORI" : {
+		"order" : 1,
+		"opcode" : 11110
+	},
+	// secondary
+	"SUB" : {
+		"order" : 2,
+		"opcode" : 01000
+	},
+	"NAND" : {
+		"order" : 2,
+		"opcode" : 01100
+	},
+	"NOR" : {
+		"order" : 2,
+		"opcode" : 01101
+	},
+	"NXOR" : {
+		"order" : 2,
+		"opcode" : 01110
+	},
+	"EQ" : {
+		"order" : 2,
+		"opcode" : 10000
+	},
+	"LT" : {
+		"order" : 2,
+		"opcode" : 10001
+	},
+	"LE" : {
+		"order" : 2,
+		"opcode" : 10010
+	},
+	"NE" : {
+		"order" : 2,
+		"opcode" : 10011
+	},
+	"ADD" : {
+		"order" : 2,
+		"opcode" : 11000
+	},
+	"AND" : {
+		"order" : 2,
+		"opcode" : 11100
+	},
+	"OR" : {
+		"order" : 2,
+		"opcode" : 11101
+	},
+	"XOR" : {
+		"order" : 2,
+		"opcode" : 11110
+	},
+	"NOT" : {
+		"order" : -1
+	},
+	"CALL" : {
+		"order" : -1
+	},
+	"RET" : {
+		"order" : -1
+	},
+	"JMP" : {
+		"order" : -1
+	},
+	"BGT" : {
+		"order" : -1
+	},
+	"BGE" : {
+		"order" : -1
+	},
+	"GT" : {
+		"order" : -1
+	},
+	"GE" : {
+		"order" : -1
+	},
+	"SUBI" : {
+		"order" : -1
+	}
+}
+
+

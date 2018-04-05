@@ -1,0 +1,246 @@
+.NAME	HEX= 0xffff0000
+.NAME	LEDR=0xFFFF0020
+.NAME	LEDG=0xFFFF0040
+.NAME   COUNT= 0xFFFF0200
+.NAME 	LIM= 0xFFFF0204
+.NAME 	TCTL= 0xFFFF0208
+.NAME	SW=  0xFFFF0120
+.NAME	KEY= 0xFFFF0100
+.NAME	KCTRL= 0xFFFF0104
+.NAME	DEAD=0xDEAD
+
+.ORIG 0x60
+;addi	a0, Zero, Zero
+;sw		a0, HEX(Zero)
+; static 60 for minute increment
+addi	t1, Zero, 60
+; register for timer state
+addi 	a0, Zero, 0
+; seconds counter
+add 	a2, Zero, Zero
+; limit for timer
+addi	t0, Zero, 500
+; set timer limit to 500 ms
+sw		t0, LIM(Zero)
+; reset timer count to 0
+sw		a2, COUNT(Zero)
+
+waithalfsec:
+; load timer control bits
+lw		t2, TCTL(Zero)
+; load keys control bits
+lw		t3, KCTRL(Zero)
+; check ready bit
+andi	t2, t2, 1
+andi 	t3, t3, 0x0002
+addi	t4, Zero, 2
+; keeps checking if keys are pressed
+beq		t3, t4, CheckKEY
+goBack:
+beq		t2, Zero, waithalfsec
+sw		Zero, TCTL(Zero)
+xori 	a0, a0, 0xFFFF
+lw		a1, SW(Zero)
+andi 	a1, a1, 1
+addi 	t5, Zero, 1
+bne 	t5, a1, notSwitched
+sw 		Zero, LEDG(Zero)
+beq 	Zero, Zero, backToCount
+notSwitched:
+sw 		Zero, LEDR(Zero)
+backToCount:
+bne 	a0, Zero, waithalfsec
+incrementsec:
+; increment seconds 
+addi 	a2, a2, 1
+; check for 60 to increment minute
+bne		a2, t1, reset
+lw 		t3, HEX(Zero)
+; checks if last hex value is 9
+addi	a1, Zero, 0x000F
+addi	t5, Zero, 0x0009
+and		t4, t3, a1
+bne 	t4, t5, incrementLSmin
+; checks if second last hex value is 6
+; clears out the least significant minute digit
+andi	t3, t3, 0xFFF0
+; adds 1 to the most significant minute digit
+addi	t3, t3, 0x0010
+addi	a1, Zero, 0x00F0
+addi	t5, Zero, 0x0060
+and 	t4, t3, a1
+bne 	t4, t5, updateHEX
+; checks most significant hour digit for 2 or not two
+addi	a1, Zero, 0xF000
+addi 	t6, Zero, 0x2000
+and		s0, t3, a1
+beq		s0, t6, two
+bne     s0, t6, notTwo
+; should never reach this
+beq		Zero, Zero, updateHEX
+
+two:
+; checks if third from right hex value is 4
+; clears the most significant minute digit
+andi	t3, t3, 0xFF0F
+; adds 1 to the least significant hour digit
+addi	t3, t3, 0x0100
+addi	a1, Zero, 0x0F00
+addi	t5, Zero, 0x0400
+and 	t4, t3, a1
+bne 	t4, t5, updateHEX
+; checks if last from right hex value is 3
+; clears the least significant hour digit
+andi	t3, t3, 0xF0FF
+; adds 1 to the most significant hour digit
+andi	t3, t3, 0x1000
+addi	a1, Zero, 0xF000
+addi	t5, Zero, 0x3000
+and		t4, t3, a1
+bne 	t4, t5, updateHEX
+add 	t3, Zero, Zero
+beq 	Zero, Zero, updateHEX
+
+notTwo:
+; checks if third from right hex value is a
+; clears the most significant minute digit
+andi	t3, t3, 0xFF0F
+; adds 1 to the least significant hour digit
+addi	t3, t3, 0x0100
+addi	a1, Zero, 0x0F00
+addi	t5, Zero, 0x0a00
+and 	t4, t3, a1
+bne 	t4, t5, updateHEX
+add 	t3, Zero, s0
+addi 	t3, s0, 0x1000
+beq 	Zero, Zero, updateHEX
+
+
+updateHEX:
+sw		t3, HEX(Zero)
+; set second to 0
+addi	a2, Zero, 0
+
+reset:
+; display seconds
+sw		a2, LEDG(Zero)
+; reset timer
+sw		Zero, COUNT(Zero)
+sw		Zero, TCTL(Zero)
+beq 	Zero, Zero, waithalfsec
+
+incrementLSmin:
+addi	t3, t3, 0x0001
+beq 	Zero, Zero, updateHEX
+
+CheckKEY:
+lw 		t7, KEY(Zero)
+lw		a1, SW(Zero)
+andi 	a1, a1, 1
+addi 	t5, Zero, 1
+bne 	t5, a1, goBack
+lw 		t6, HEX(Zero)
+;sw 		t7, LEDR(Zero)
+;andi	s0, t6, 0x000F
+;andi	t6, t6, 0xFFF0
+; Checks for each button
+andi	s0, t7, 1
+addi 	t5, Zero, 1
+beq		s0, t5, decrementMinute
+andi 	s0,	t7,	2
+addi 	t5, Zero, 2
+beq		s0, t5, incrementMinute
+andi 	s0,	t7,	0x0008
+addi 	t5, Zero, 0x0008
+beq 	s0, t5, incrementHour
+andi 	s0,	t7,	4
+addi 	t5, Zero, 4
+beq 	s0, t5, decrementHour
+beq		Zero, Zero, goBack
+
+incrementHour:
+andi	s1, t6, 0x00FF
+andi 	s2, t6, 0xFF00
+addi 	s0, Zero, 0x2300
+beq 	s0, s2, twentyThree
+andi 	s0, t6, 0x0F00
+addi 	s3, Zero, 0x0900
+beq 	s3, s0, lastDigitNine
+addi	s2, s2, 0x0100
+add 	t6, s2, s1
+beq 	Zero, Zero, jumptoBack
+lastDigitNine:
+addi	s2, s2, 0x0700
+add 	t6, s2, s1
+beq 	Zero, Zero, jumptoBack
+twentyThree:
+add 	t6, Zero, s1
+beq 	Zero, Zero, jumptoBack
+
+decrementHour:
+andi	s1, t6, 0x00FF
+andi 	s2, t6, 0xFF00
+beq 	s2, Zero, HouratZero
+andi 	s0, t6, 0x0F00
+beq 	Zero, s0, lastDigitZero
+subi	s2, s2, 0x0100
+add 	t6, s2, s1
+beq 	Zero, Zero, jumptoBack
+lastDigitZero:
+subi	s2, s2, 0x0700
+add 	t6, s2, s1
+beq 	Zero, Zero, jumptoBack
+HouratZero:
+addi 	s0, Zero, 0x2300
+add 	t6, s0, s1
+beq 	Zero, Zero, jumptoBack
+
+decrementMinute:
+; decreasing just the minutes
+andi	s1, t6, 0x00FF
+andi 	s2, t6, 0xFF00
+beq 	s1, Zero, atZero
+andi 	s0, t6, 0x000F
+beq 	s0, Zero, lastDigZero
+andi 	s4, t6, 0xFFF0
+subi	s0, s0, 1
+add 	t6, s4, s0
+beq 	Zero, Zero, jumptoBack
+lastDigZero:
+subi 	s1, s1, 7
+add 	t6, s2, s1
+beq 	Zero, Zero, jumptoBack
+atZero:
+addi 	t6, s2, 0x0059
+beq 	Zero, Zero, jumptoBack
+
+; increasing just the minutes
+incrementMinute: 
+addi 	s0, Zero, 0x0059
+andi 	s1, t6, 0x00FF
+andi 	s2, t6, 0xFF00
+beq 	s0, s1, fiftynine
+; gets the last digit to check with 9
+andi 	s0, t6, 0x000F
+addi 	s3, Zero, 9
+beq 	s0, s3, justNine
+andi 	s4, t6, 0xFFF0
+addi 	s0, s0, 1
+add 	t6, s4,	s0
+beq 	Zero, Zero, jumptoBack
+justNine:
+addi 	s1, s1, 7
+add 	t6, s2, s1
+beq 	Zero, Zero, jumptoBack
+fiftynine:
+add 	t6, s2, Zero
+beq 	Zero, Zero, jumptoBack
+
+
+jumptoBack:
+sw 		t6, HEX(Zero)
+sw 		Zero, KCTRL(Zero)
+beq 	Zero, Zero, goBack
+
+
+

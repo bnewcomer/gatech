@@ -1,0 +1,46 @@
+<html>
+	<body>
+		<!-- <script type="text/javascript" src="conditionals-and-loops.js"></script>
+		<script type="text/javascript" src="arrays.js"></script> -->
+		
+		<input type="text" id="text-in" placeholder="value"/>
+		<div>
+			<span>[<span id="text-out">empty</span>]</span>
+		</div>
+		<button onclick="addToArray();">insert</button>
+		
+		<script>
+
+		var array = [];
+
+		function addToArray() {
+			// get the value in the input element
+			var val = document.getElementById("text-in").value;
+
+			// append to array
+			array.push(val);
+
+			// print out the whole array into the span
+			var arrayAsString = '';
+			for (var ndx in array) {
+				if (ndx == 0) {
+					arrayAsString = array[ndx];
+				} else {
+					arrayAsString = arrayAsString + ', ' + array[ndx];
+				}
+			}
+			document.getElementById("text-out").innerHTML = arrayAsString;
+		}
+		</script>
+		
+		<style>
+		input, button, div {
+			display:block;
+			padding:10px;
+			margin:auto;
+			text-align:center;
+		}
+		</style>
+		
+	</body>
+</html>

@@ -1,0 +1,668 @@
+; Stack begins at the very top of memory
+.NAME   StkTop=4192
+
+; Addresses for I/O
+.NAME WRHEX  = 1
+.NAME RDHEX  = 2
+.NAME WRLEDG = 3
+.NAME RDLEDG = 4
+.NAME WRLEDR = 5
+.NAME RDLEDR = 6
+.NAME RDKEY = 7
+.NAME RDSW = 8
+.NAME RDCNT = 9
+.NAME WRLIM = 10
+.NAME RDLIM = 11
+.NAME WRCNT = 12 
+
+;  Number of sorting iterations
+.NAME	ItNum=300
+
+.NAME Seconds=400
+
+; The array starts at data address 
+; 0x400 and has 1024 elements (4kB)
+.NAME Array=0x400
+.NAME ArrayBytes=4096
+
+.NAME	SStkTop=8192
+
+; clock constants
+.NAME TIMERLIMIT=500
+.NAME TIMERSTATE = 600
+.NAME TIMERVALUE = 800
+
+; switch value
+.NAME SWITCHVAL = 700
+
+.ORIG 0x10
+;;;;;;;;;;;;; interrupt handler;;;;;;;;;;;;;
+
+	; save previous rv before it gets clobbered
+	ADDI SSP, SSP, -4
+	SW RA,0(SSP)
+	CALL 	Save(Zero)
+	; check for cause of interrupt
+	rsr 	t0, IDN
+	;addi 	a0, Zero, 1
+	addi 	t1, Zero, 1
+	; check if timer
+	beq 	t0, t1, TimerHandler
+	addi 	t1, t1, 1
+	; check if key
+	beq 	t0, t1, KeyHandler
+	addi 	t1, t1, 1
+	; check if switch
+	beq 	t0, t1, SwitchHandler
+
+	; if we get here there was
+	; a problem
+	beq 	Zero, Zero, ErrorHandler
+
+;  Now the actual code
+.ORIG 0x60
+	
+	;;;;;;;;;;;;; set up clock ;;;;;;;;;;;;;;;
+
+	; set timer limit
+	addi 	a0, Zero, WRLIM
+	addi	a1, Zero, TIMERLIMIT
+	sys
+	
+	; reset timer count to 0
+	addi 	a0, Zero, WRCNT
+	addi 	a1, Zero, 0
+	sys
+
+	;;;;;;;;;;;;;; set up Sorter ;;;;;;;;;;;;
+
+	; Put a zero in the Zero register
+	ANDI	Zero,Zero,0
+	
+	; SP Points to the top of the stack
+	ADDI	SP,Zero,StkTop
+	; SSP Points to the top of the system stack
+	ADDI	SSP,Zero,SStkTop
+
+	; Initialize timer state
+	SW 		Zero, TIMERSTATE(Zero)
+	SW 		Zero, TIMERVALUE(Zero)
+	SW 		Zero, Seconds(Zero)
+
+	; Initialize Switch Val
+	;addi 	a0, Zero, RDSW
+	;sys
+	sw 		Zero, SWITCHVAL(Zero)
+
+	; Turn off LEDR and LEDG
+	XOR 	A1, Zero, Zero   ; Zero to put in LED
+	ADDI 	A0, Zero, WRLEDR ; Turn off LEDR
+	SYS
+	ADDI 	A0, Zero, WRLEDG ; Turn off LEDG
+	SYS
+	
+	; Initialize the array with numbers 13, 13+11, 13+2*11, etc.
+	ADDI 	T0,Zero,Array		; T0 is CurPtr, set to start of array
+	ADDI	T1,T0,ArrayBytes	; T1 is EndPtr, set to end of array
+	ADDI	S1,Zero,13			; S1 is the current value of the array element for initialization
+
+Init:
+	SW		S1,0(T0)			; Store value into an element
+	ADDI	S1,S1,11			; Add 13 to the value for next element
+	ADDI	T0,T0,4				; Move to next element
+	BNE		T0,T1,Init			; if(CurPtr!=EndPtr) goto Init;
+	
+	; Initialization done. Now check if the array is sorted in ascending order (it should be)
+	CALL	ChkAsc(Zero)
+	
+	; This is the main loop of the program, which repeats the same work ItNum times
+	ADDI	S1,S0,ItNum		; We will keep the iteration count in S1
+	
+	; Display loop counter
+	LW 		A0, SWITCHVAL(Zero)
+	ANDI 	A0, A0, 0x0200
+	BNE 	A0, Zero, MainLoop
+	ADDI 	A0, Zero, WRHEX
+	ADD 	A1, Zero, S1
+	SYS   					
+
+MainLoop:
+	; The work is to sort the array in descending and then in ascending order
+	ADDI	A0,Zero,Array
+	ADDI	A1,A0,ArrayBytes
+	CALL	SortDesc(Zero)		; SortDesc(Array,ArrayBytes)
+	CALL	ChkDesc(Zero)		; ChkDesc()
+	ADDI	A0,Zero,Array
+	ADDI	A1,A0,ArrayBytes
+	CALL	SortAsc(Zero)		; SortAsc(Array,ArrayBytes)
+	CALL 	ChkAsc(Zero)		; ChkAsc()
+	ADDI	S1,S1,-1			; Decrement iteration count
+	
+	; Display the new value on HEX
+	LW 		A0, SWITCHVAL(Zero)
+	ANDI 	A0, A0, 0x0200
+	BNE 	A0, Zero, SKIPHEX 
+	ADDI 	A0, Zero, WRHEX
+	ADD 	A1, Zero, S1
+	SYS
+SKIPHEX:
+	BNE		S1,Zero,MainLoop	; Back to main loop
+
+Done:
+	LW 		A0, SWITCHVAL(Zero)
+	ANDI 	A0, A0, 0x0200
+	BNE 	A0, Zero, Done
+	; Turn on LEDG
+	ADDI 	A0, Zero, WRLEDG
+	NOT		A1,Zero				; All-ones in T0
+	SYS
+
+	; Put 0000 in HEX
+	addi 	a0, Zero, WRHEX
+	add  	A1, Zero, Zero
+	sys
+
+	; Turn off LEDR
+	ADDI 	A0, Zero, WRLEDR
+	XOR 	A1, Zero, Zero
+	SYS
+
+	JMP Done(Zero)				; Loop forever
+
+	; Verifies that the array is sorted in ascending order
+ChkAsc:
+	ADDI	A0,Zero,Array
+	ADDI	A1,A0,ArrayBytes
+	ADDI	A2,Zero,13
+LoopChkAsc:
+	LW		T0,0(A0)
+	BEQ		T0,A2,GoodChkAsc
+ErrChkAsc:
+	; Put value we read on HEX
+	ADDI 	A0, Zero, WRHEX
+	ADD 	A1, Zero, T0
+	SYS
+
+	; Turn on upper half of LEDR
+	ADDI 	A0, Zero, WRLEDR
+	ADDI 	A1, Zero,0x3E0
+	SYS
+
+	; Loop forever
+	JMP		ErrChkAsc(Zero)		
+GoodChkAsc:
+	ADDI	A2,a2,11
+	ADDI	A0,A0,4
+	BNE		A0,A1,LoopChkAsc
+	RET
+
+	; Verifies that the array is sorted in descending order
+ChkDesc:
+	ADDI	A1,Zero,Array
+	ADDI	A0,A1,ArrayBytes
+	ADDI	A2,S0,13
+LoopChkDesc:
+	SUBI	A0,A0,4
+	LW		T1,0(A0)
+	BEQ		A2,T1,GoodChkDesc
+ErrChkDesc:
+	; Put value we read on HEX
+	ADDI 	A0, Zero, WRHEX
+	ADD 	A1, Zero, T1
+	SYS
+	
+	; Turn on lower half of LEDR
+	ADDI 	A0, Zero, WRLEDR
+	ADDI 	A1, Zero,0x01F
+	SYS
+
+	JMP		ErrChkDesc(Zero)	; Loop forever
+GoodChkDesc:
+	ADDI	A2,A2,11
+	BNE		A1,A0,LoopChkDesc
+	RET
+
+SortAsc:; SortAsc(beg,end)
+	; Sorts an array that starts at beg and ends at end
+	; Sorts in ascending order (low to high values)
+	; The sorting strategy is selection sort
+	; Outer loop (ptr "i" in A0) goes from start to end
+SortAscLoopI:
+	BEQ     A0,A1,SortAscEndI
+	LW		T0,0(A0)	; T0 will be equal to what should be in *i
+	; Inner loop (ptr "j" in A2) goes from i+4 to end
+    ADDI    A2,A0,4
+SortAscLoopJ:  
+    BEQ     A2,A1,SortAscEndJ
+	LW		T1,0(A2)	; T1=*j
+	BLE		T0,T1,SortAscNoSwap
+	SW		T0,0(A2)	; *j=T0 (*j becomes what was in *i)
+	ADD		T0,T1,S0	; T0=T1 (*i becomes what was in *j)
+SortAscNoSwap:
+	ADDI	A2,A2,4
+	JMP		SortAscLoopJ(Zero)
+SortAscEndJ:
+	SW		T0,0(A0)	; Save T0 back into *i
+	ADDI	A0,A0,4
+	JMP		SortAscLoopI(Zero)
+SortAscEndI:
+	RET
+	
+SortDesc:; SortDesc(beg,end)
+	; Sorts an array that starts at beg and ends at end
+	; Sorts in descending order (high to low values)
+	; The sorting strategy is immediate-swap selection sort
+	; Outer loop (ptr "i" in T0) goes from start to end
+	ADDI	T0,A0,0
+SortDescLoopI:
+	BEQ     T0,A1,SortDescEndI
+	; Inner loop (ptr "j" in T1) goes from i+4 to end
+    ADDI    T1,T0,4
+SortDescLoopJ:  
+    BEQ     T1,A1,SortDescEndJ
+	LW		A2,0(T0)	; A2=*i
+	LW		A3,0(T1)	; A3=*j
+	BGE		A2,A3,SortDescNoSwap
+	SW		A2,0(T1)	; *j=A2
+	SW		A3,0(T0)	; *i=A3
+SortDescNoSwap:
+	ADDI	T1,T1,4
+	JMP		SortDescLoopJ(Zero)
+SortDescEndJ:
+	ADDI	T0,T0,4
+	JMP		SortDescLoopI(Zero)
+SortDescEndI:
+	RET
+
+Save: ; saves the registers
+	ADDI SSP, SSP, -4
+	SW A0,0(SSP)
+	ADDI SSP, SSP, -4
+	SW A1,0(SSP)
+	ADDI SSP, SSP, -4
+	SW A2,0(SSP)
+	ADDI SSP, SSP, -4
+	SW A3,0(SSP)
+	ADDI SSP, SSP, -4
+	SW RV,0(SSP)
+	ADDI SSP, SSP, -4
+	SW R6,0(SSP)
+	ADDI SSP, SSP, -4
+	SW R7,0(SSP)
+	ADDI SSP, SSP, -4
+	SW T0,0(SSP)
+	ADDI SSP, SSP, -4
+	SW T1,0(SSP)
+	ADDI SSP, SSP, -4
+	SW T2,0(SSP)
+	ADDI SSP, SSP, -4
+	SW T3,0(SSP)
+	ADDI SSP, SSP, -4
+	SW T4,0(SSP)
+	ADDI SSP, SSP, -4
+	SW T5,0(SSP)
+	ADDI SSP, SSP, -4
+	SW T6,0(SSP)
+	ADDI SSP, SSP, -4
+	SW T7,0(SSP)
+	ADDI SSP, SSP, -4
+	SW S0,0(SSP)
+	ADDI SSP, SSP, -4
+	SW S1,0(SSP)
+	ADDI SSP, SSP, -4
+	SW S2,0(SSP)
+	ADDI SSP, SSP, -4
+	SW S3,0(SSP)
+	ADDI SSP, SSP, -4
+	SW S4,0(SSP)
+	ADDI SSP, SSP, -4
+	SW S5,0(SSP)
+	ADDI SSP, SSP, -4
+	SW S6,0(SSP)
+	ADDI SSP, SSP, -4
+	SW S7,0(SSP)
+	ADDI SSP, SSP, -4
+	SW R25,0(SSP)
+	ADDI SSP, SSP, -4
+	SW R26,0(SSP)
+	ADDI SSP, SSP, -4
+	SW R27,0(SSP)
+	ADDI SSP, SSP, -4
+	SW GP,0(SSP)
+	ADDI SSP, SSP, -4
+	SW FP,0(SSP)
+	ADDI SSP, SSP, -4
+	SW SP,0(SSP)
+	RET
+
+RESTORE: ; Restores general purpose registers
+	LW SP,0(SSP)
+	ADDI SSP,SSP,4
+	LW FP,0(SSP)
+	ADDI SSP,SSP,4
+	LW GP,0(SSP)
+	ADDI SSP,SSP,4
+	LW R27,0(SSP)
+	ADDI SSP,SSP,4
+	LW R26,0(SSP)
+	ADDI SSP,SSP,4
+	LW R25,0(SSP)
+	ADDI SSP,SSP,4
+	LW S7,0(SSP)
+	ADDI SSP,SSP,4
+	LW S6,0(SSP)
+	ADDI SSP,SSP,4
+	LW S5,0(SSP)
+	ADDI SSP,SSP,4
+	LW S4,0(SSP)
+	ADDI SSP,SSP,4
+	LW S3,0(SSP)
+	ADDI SSP,SSP,4
+	LW S2,0(SSP)
+	ADDI SSP,SSP,4
+	LW S1,0(SSP)
+	ADDI SSP,SSP,4
+	LW S0,0(SSP)
+	ADDI SSP,SSP,4
+	LW T7,0(SSP)
+	ADDI SSP,SSP,4
+	LW T6,0(SSP)
+	ADDI SSP,SSP,4
+	LW T5,0(SSP)
+	ADDI SSP,SSP,4
+	LW T4,0(SSP)
+	ADDI SSP,SSP,4
+	LW T3,0(SSP)
+	ADDI SSP,SSP,4
+	LW T2,0(SSP)
+	ADDI SSP,SSP,4
+	LW T1,0(SSP)
+	ADDI SSP,SSP,4
+	LW T0,0(SSP)
+	ADDI SSP,SSP,4
+	LW R7,0(SSP)
+	ADDI SSP,SSP,4
+	LW R6,0(SSP)
+	ADDI SSP,SSP,4
+	LW RV,0(SSP)
+	ADDI SSP,SSP,4
+	LW A3,0(SSP)
+	ADDI SSP,SSP,4
+	LW A2,0(SSP)
+	ADDI SSP,SSP,4
+	LW A1,0(SSP)
+	ADDI SSP,SSP,4
+	LW A0,0(SSP)
+	ADDI SSP,SSP,4
+	LW RA,0(SSP)
+	ADDI SSP,SSP,4
+	RETI
+
+CHECKSWITCH:
+	lw 		s0, SWITCHVAL(Zero)
+	; Checks for both SW[9] and SW[0]
+	andi 	s0, s0, 0x0201
+	addi 	s1, Zero, 0x0201
+	bne 	s0, s1, TimeBack
+	ADDI 	A0, Zero, WRLEDG
+	ADD  	A1,Zero, Zero			
+	SYS
+	beq 	Zero, Zero, TimeBack
+
+
+TimerHandler: ;handles timer interrupts
+	; reset count to zero,
+	; which acks interrupt
+	addi 	a0, Zero, WRCNT
+	addi 	a1, Zero, 0
+	sys
+
+	lw 		t1, TIMERSTATE(Zero)
+	xori 	t1, t1, 0xFFFF
+	sw 		t1, TIMERSTATE(Zero)
+	bne 	t1, Zero, CHECKSWITCH
+	; increment seconds
+	lw 		a1, Seconds(Zero) 
+	addi 	a1, a1, 1
+	addi 	a2, Zero, 60
+	; checks if equal to 60
+	beq 	a1, a2, Increment
+	sw 		a1, Seconds(Zero)
+	lw 		t3, TIMERVALUE(Zero)
+	beq 	Zero, Zero, updateHEX
+
+Increment:
+	add 	a1, Zero, Zero
+	sw 		a1, Seconds(Zero)
+	; register numbers assigned to be consistent with Clock.a32
+	lw 		t3, TIMERVALUE(Zero)
+	;addi 	t3, t3, a1
+	; copy pasterino from Clock.a32
+	addi	a1, Zero, 0x000F
+	addi	t5, Zero, 0x0009
+	and		t4, t3, a1
+	bne 	t4, t5, incrementLSmin
+	; checks if second last hex value is 6
+	; clears out the least significant minute digit
+	andi	t3, t3, 0xFFF0
+	; adds 1 to the most significant minute digit
+	addi	t3, t3, 0x0010
+	addi	a1, Zero, 0x00F0
+	addi	t5, Zero, 0x0060
+	and 	t4, t3, a1
+	bne 	t4, t5, updateHEX
+	; checks most significant hour digit for 2 or not two
+	addi	a1, Zero, 0xF000
+	addi 	t6, Zero, 0x2000
+	and		s0, t3, a1
+	beq		s0, t6, two
+	bne     s0, t6, notTwo
+	; should never reach this
+	beq		Zero, Zero, updateHEX
+
+two:
+	; checks if third from right hex value is 4
+	; clears the most significant minute digit
+	andi	t3, t3, 0xFF0F
+	; adds 1 to the least significant hour digit
+	addi	t3, t3, 0x0100
+	addi	a1, Zero, 0x0F00
+	addi	t5, Zero, 0x0400
+	and 	t4, t3, a1
+	bne 	t4, t5, updateHEX
+	; checks if last from right hex value is 3
+	; clears the least significant hour digit
+	andi	t3, t3, 0xF0FF
+	; adds 1 to the most significant hour digit
+	andi	t3, t3, 0x1000
+	addi	a1, Zero, 0xF000
+	addi	t5, Zero, 0x3000
+	and		t4, t3, a1
+	bne 	t4, t5, updateHEX
+	add 	t3, Zero, Zero
+	beq 	Zero, Zero, updateHEX
+
+notTwo:
+	; checks if third from right hex value is a
+	; clears the most significant minute digit
+	andi	t3, t3, 0xFF0F
+	; adds 1 to the least significant hour digit
+	addi	t3, t3, 0x0100
+	addi	a1, Zero, 0x0F00
+	addi	t5, Zero, 0x0a00
+	and 	t4, t3, a1
+	bne 	t4, t5, updateHEX
+	add 	t3, Zero, s0
+	addi 	t3, s0, 0x1000
+	beq 	Zero, Zero, updateHEX
+
+
+updateHEX:
+	SW 		t3, TIMERVALUE(Zero)
+	; display seconds and time
+	LW 		A0, SWITCHVAL(Zero)
+	ANDI 	A0, A0, 0x0200
+	BEQ 	A0, Zero, TimeBack
+	addi 	a0, Zero, WRLEDG
+	lw 		a1, Seconds(Zero)
+	sys
+	ADDI 	A0, Zero, WRHEX
+	ADD 	A1, Zero, t3
+	SYS
+
+TimeBack:
+	JMP 	RESTORE(Zero)
+
+
+incrementLSmin:
+	addi	t3, t3, 0x0001
+	beq 	Zero, Zero, updateHEX
+
+KeyHandler: ; handles key interrupts
+	; read keys,
+	; which acks interrupt
+	addi 	a0, Zero, RDKEY
+	sys
+
+	lw 		s0, SWITCHVAL(Zero)
+	; Checks for both SW[9] and SW[0]
+	andi 	s0, s0, 0x0201
+	addi 	s1, Zero, 0x0201
+	bne 	s0, s1, TimeBack
+	add 	t7, rv, Zero
+	lw 		t6, TIMERVALUE(Zero)
+	; copy and pasterino from Clock.a32
+	andi	s0, t7, 1
+	addi 	t5, Zero, 1
+	beq		s0, t5, decrementMinute
+	andi 	s0,	t7,	2
+	addi 	t5, Zero, 2
+	beq		s0, t5, incrementMinute
+	andi 	s0,	t7,	0x0008
+	addi 	t5, Zero, 0x0008
+	beq 	s0, t5, incrementHour
+	andi 	s0,	t7,	4
+	addi 	t5, Zero, 4
+	beq 	s0, t5, decrementHour
+	beq		Zero, Zero, TimeBack
+
+incrementHour:
+	andi	s1, t6, 0x00FF
+	andi 	s2, t6, 0xFF00
+	addi 	s0, Zero, 0x2300
+	beq 	s0, s2, twentyThree
+	andi 	s0, t6, 0x0F00
+	addi 	s3, Zero, 0x0900
+	beq 	s3, s0, lastDigitNine
+	addi	s2, s2, 0x0100
+	add 	t6, s2, s1
+	beq 	Zero, Zero, jumptoBack
+lastDigitNine:
+	addi	s2, s2, 0x0700
+	add 	t6, s2, s1
+	beq 	Zero, Zero, jumptoBack
+twentyThree:
+	add 	t6, Zero, s1
+	beq 	Zero, Zero, jumptoBack
+
+decrementHour:
+	andi	s1, t6, 0x00FF
+	andi 	s2, t6, 0xFF00
+	beq 	s2, Zero, HouratZero
+	andi 	s0, t6, 0x0F00
+	beq 	Zero, s0, lastDigitZero
+	subi	s2, s2, 0x0100
+	add 	t6, s2, s1
+	beq 	Zero, Zero, jumptoBack
+lastDigitZero:
+	subi	s2, s2, 0x0700
+	add 	t6, s2, s1
+	beq 	Zero, Zero, jumptoBack
+HouratZero:
+	addi 	s0, Zero, 0x2300
+	add 	t6, s0, s1
+	beq 	Zero, Zero, jumptoBack
+
+decrementMinute:
+	; decreasing just the minutes
+	andi	s1, t6, 0x00FF
+	andi 	s2, t6, 0xFF00
+	beq 	s1, Zero, atZero
+	andi 	s0, t6, 0x000F
+	beq 	s0, Zero, lastDigZero
+	andi 	s4, t6, 0xFFF0
+	subi	s0, s0, 1
+	add 	t6, s4, s0
+	beq 	Zero, Zero, jumptoBack
+lastDigZero:
+	subi 	s1, s1, 7
+	add 	t6, s2, s1
+	beq 	Zero, Zero, jumptoBack
+atZero:
+	addi 	t6, s2, 0x0059
+	beq 	Zero, Zero, jumptoBack
+
+	; increasing just the minutes
+incrementMinute: 
+	addi 	s0, Zero, 0x0059
+	andi 	s1, t6, 0x00FF
+	andi 	s2, t6, 0xFF00
+	beq 	s0, s1, fiftynine
+	; gets the last digit to check with 9
+	andi 	s0, t6, 0x000F
+	addi 	s3, Zero, 9
+	beq 	s0, s3, justNine
+	andi 	s4, t6, 0xFFF0
+	addi 	s0, s0, 1
+	add 	t6, s4,	s0
+	beq 	Zero, Zero, jumptoBack
+justNine:
+	addi 	s1, s1, 7
+	add 	t6, s2, s1
+	beq 	Zero, Zero, jumptoBack
+fiftynine:
+	add 	t6, s2, Zero
+	beq 	Zero, Zero, jumptoBack
+
+
+jumptoBack:
+	add 	t3, t6, Zero
+	beq 	Zero, Zero, updateHEX
+
+	; Turn on LEDG[1]
+	;ADDI 	A0, Zero, WRLEDG
+	;ADD 	A1, Zero, RV
+	;SYS
+	;JMP 	RESTORE(Zero)
+
+SwitchHandler: ; handles switch interrupts
+	addi 	a0, Zero, RDSW
+	sys
+
+	sw 		rv, SWITCHVAL(Zero)
+	ADDI 	A0, Zero, WRLEDG
+	ADD  	A1,Zero, Zero			
+	SYS
+	ANDI 	rv, rv, 0x0200
+	BEQ 	rv, Zero, TimeBack
+	addi 	a0, Zero, WRHEX
+	lw  	A1, TIMERVALUE(Zero)
+	sys
+
+	; Turn on LEDG[2]
+	;ADDI 	A0, Zero, WRLEDR
+	;ADD 	A1, Zero, RV
+	;SYS
+	JMP 	RESTORE(Zero)
+
+ErrorHandler: ; handles random errors
+	rsr 	a1, IDN
+	addi 	a0, Zero, WRHEX
+	sys
+
+ErrorHandlerDone:
+	; Turn on middle half of LEDR
+	ADDI 	A0, Zero, WRLEDR
+	ADDI 	A1, Zero,0x03A
+	SYS
+	JMP		ErrorHandlerDone(Zero)	; Loop forever

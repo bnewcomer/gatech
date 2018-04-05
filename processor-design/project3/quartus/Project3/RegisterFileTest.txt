@@ -1,0 +1,9 @@
+time (ns): test case; expected outputs
+
+40-60  : read reg[0], reg[1]; readval1 == 0, readval2 == 1
+60-80  : write 25 to reg[1], WE = 0; 
+80-100 : read reg[1]; readval2 == 1
+100-120: write 30 to reg[1], WE = 1;
+120-160: read reg[1]; readval2 == 30
+160-180: write 40 to reg[1] and read reg[1]; readval2 == X
+180-200: read reg[1]; readval2 == 40

@@ -1,0 +1,54 @@
+; Addresses for I/O
+.NAME WRHEX  = 1
+.NAME RDHEX  = 2
+.NAME WRLEDG = 3
+.NAME RDLEDG = 4
+.NAME WRLEDR = 5
+.NAME RDLEDR = 6
+.NAME RDKEY = 7
+.NAME RDSW = 8
+.NAME RDCNT = 9
+.NAME WRLIM = 10
+.NAME RDLIM = 11
+.NAME WRCNT = 12 
+
+.NAME LIMIT = 1000
+
+.ORIG 0x10
+; timer handler
+
+	; reset count to zero,
+	; which acks interrupt
+	addi 	a0, Zero, WRCNT
+	addi 	a1, Zero, 0
+	sys
+
+	; increment seconds 
+	addi 	a2, a2, 1
+
+	; display seconds
+	addi 	a0, Zero, WRHEX
+	addi 	a1, a2, 0
+	sys
+
+	reti
+
+.ORIG 0x60
+
+	; seconds counter
+	addi	a2, Zero, 0
+
+	; limit for timer
+	addi 	a0, Zero, WRLIM
+	addi 	a1, Zero, LIMIT
+	sys
+
+	; reset timer count to 0
+	addi 	a0, Zero, WRCNT
+	addi 	a1, Zero, 0
+	sys
+
+	wait:
+	and 	fp, fp, fp
+	and		fp, fp, fp
+	beq 	Zero, Zero, wait

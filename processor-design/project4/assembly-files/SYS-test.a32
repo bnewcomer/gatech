@@ -1,0 +1,40 @@
+.ORIG 0x60
+
+; init values
+xor 	Zero, Zero, Zero
+addi	t0, Zero, 1
+
+;write values to io devices
+write:
+
+;write to hex
+addi	a0, Zero, 1
+add 	a1, Zero, t0
+sys
+
+;read from hex
+addi	a0, Zero, 2
+sys
+
+add 	t0, Zero, rv
+addi 	rv, Zero, 0
+
+;write to ledg
+addi	a0, Zero, 3
+add 	a1, Zero, t0
+sys
+
+;read from ledg
+addi 	a0, Zero, 4
+sys
+
+add 	t0, Zero, rv
+addi 	rv, Zero, 0
+
+;write to ledr
+addi	a0, Zero, 5
+add 	a1, Zero, t0
+sys
+
+;loop
+;jal	ra, write(Zero)

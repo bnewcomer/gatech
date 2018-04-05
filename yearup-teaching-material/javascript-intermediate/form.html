@@ -1,0 +1,41 @@
+<html>
+	<body>
+		<form onsubmit="return formInput();">
+			<input name="name" type="text" placeholder="firstname lastname"/>
+			<textarea name="address" placeholder="address"></textarea>
+			<input name="phone" type="text" placeholder="(123) 456-7890">
+			<input type="submit" value="submit"/>
+		</form>
+		
+		<script>
+		function formInput() {
+			// get form values
+			var person = {
+				name: 		document.getElementsByName("name")[0].value,
+				address: 	document.getElementsByName("address")[0].value,
+				phone: 		document.getElementsByName("phone")[0].value
+			};
+			
+			// check for empty fields
+			for (var n in person) {
+				if (!person[n]) {
+					console.log(n + ' is invalid');
+					document.getElementsByName(n)[0].className = "invalid";
+				}
+			}
+			
+			return false;
+		}
+		</script>
+		
+		<style>
+		.invalid {
+			border:1px solid red;
+		}
+		input, textarea {
+			display:block;
+			margin:10px auto;
+		}
+		</style>
+	</body>
+</html>

@@ -1,0 +1,9 @@
+test (ns): test case; expected
+
+0-40   : reset; PC == 0x60
+40-60  : no input; PC == 0x64
+60-80  : stall; PC == 0x64
+80-100 : no input; PC == 0x68
+100-120: JMP, PCIN = 0xc8; PC == C8
+
+It seems like the response to signals is an entire cycle too late
